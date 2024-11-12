@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N-Queens Genetic Solver</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f4f6f9;
+        }
+        
+        body {
+            background-image: url("{{ url_for('static', filename='images/ai.jpg') }}");
+            background-size: cover; /* Adjusts the image to cover the entire background */
+            background-position: center; /* Centers the background image */
+            background-repeat: no-repeat; /* Prevents the background   
+        from repeating */
+            font-family: Arial, sans-serif;
+            /* Add these properties to fill the entire space */
+            height: 100vh; /* Sets the height to 100% of the viewport height */
+            margin: 0; /* Removes default margins */
+        }
+
+        h1 { color: #333; margin-bottom: 10px; }
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 80%;
+            max-width: 400px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        #board {
+            display: grid;
+            gap: 1px;
+            margin-top: 10px;
+            grid-template-columns: repeat(8, 50px);
+        }
+        .cell {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .white { background-color: #f0d9b5; }
+        .black { background-color: #b58863; }
+        .queen { color: black; font-size: 30px; }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>N-Queens Solver (Genetic Algorithm)</h1>
+
+    <div class="form-container">
+        <label for="n">Enter Board Size (N)</label>
+        <input type="number" id="n" min="4" max="12" value="8">
+        <button onclick="solve()">Start Solving</button>
+    </div>
+
+    <div id="board"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        const boardContainer = document.getElementById('board');
+
+        function drawBoard(board, N) {
+            boardContainer.innerHTML = '';
+            boardContainer.style.gridTemplateColumns = `repeat(${N}, 50px)`;
+            for (let i = 0; i < N; i++) {
+                for (let j = 0; j < N; j++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell', (i + j) % 2 === 0 ? 'white' : 'black');
+                    if (board[i] === j) {
+                        cell.innerHTML = '&#9813;';
+                        cell.classList.add('queen');
+                    }
+                    boardContainer.appendChild(cell);
+                }
+            }
+        }
+
+        function solve() {
+            const N = parseInt(document.getElementById('n').value);
+            socket.emit('solve', { N });
+        }
+
+        socket.on('update', data => {
+            drawBoard(data.board, data.board.length);
+        });
+
+        socket.on('solution', data => {
+            alert(`Solution found!`);
+            drawBoard(data.board, data.board.length);
+        });
+
+        socket.on('complete', data => {
+            if (!data.solution_found) {
+                alert(`No solution found after max generations.`);
+            }
+        });
+    </script>
+</body>
+</html>
