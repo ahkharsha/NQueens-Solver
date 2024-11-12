@@ -78,4 +78,4 @@ def handle_solve(data):
     emit('complete', {'solution_found': bool(nqueens.solution)})
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=False)
