@@ -4,14 +4,149 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>N-Queens Solver with State Space Tree</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+      /* static/style.css */
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background: #1e1e2f; /* Dark background */
+        color: #f1f1f1; /* Light text color */
+      }
+
+      .container {
+        text-align: center;
+        width: 100%;
+        max-width: 600px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.05); /* Semi-transparent background */
+        border-radius: 15px;
+        box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      h1 {
+        font-size: 2rem; /* Increased font size */
+        margin-bottom: 1rem;
+        color: #ffc107; /* Gold color for headings */
+      }
+
+      .form-container {
+        margin-top: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      label {
+        font-size: 1rem;
+        margin-bottom: 10px;
+        color: #ffc107; /* Gold color for labels */
+      }
+
+      input[type="number"] {
+        padding: 8px;
+        border-radius: 5px;
+        border: 1px solid #444; /* Dark border */
+        width: 80px;
+        margin-bottom: 20px;
+        background-color: #222; /* Dark input background */
+        color: #f1f1f1; /* Light text color */
+      }
+
+      input[type="number"]:focus {
+        outline: none;
+        border-color: #ffc107; /* Gold border on focus */
+        box-shadow: 0px 0px 5px rgba(255, 193, 7, 0.5); /* Gold shadow on focus */
+      }
+
+      button {
+        padding: 10px 20px;
+        background-color: #ffc107; /* Gold button */
+        color: #1e1e2f; /* Dark text on button */
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1rem;
+        transition: all 0.3s ease; /* Smooth transition for effects */
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow effect */
+      }
+
+      button:hover {
+        background-color: #ffca28; /* Lighter gold on hover */
+        transform: translateY(-2px); /* Lift effect on hover */
+        box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3); /* Enhanced shadow on hover */
+      }
+
+      #board {
+        display: grid;
+        gap: 2px;
+        margin-top: 20px;
+        justify-content: center; /* Center the board in the container */
+      }
+
+      .cell {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s ease;
+      }
+
+      .cell.white {
+        background-color: #eee; /* Light square color */
+      }
+
+      .cell.black {
+        background-color: #444; /* Dark square color */
+      }
+
+      .queen {
+        color: #ff5722; /* Queen piece color */
+        font-size: 1.5rem;
+      }
+
+      /* Popup Alert Styles */
+      .popup {
+        display: none;
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.3);
+        padding: 20px;
+        z-index: 1000;
+        text-align: center; /* Center text in popup */
+      }
+
+      .popup h2 {
+        margin-bottom: 15px;
+        color: #333;
+      }
+
+      .popup button {
+        background-color: #ffc107;
+        border: none;
+        color: white;
+        padding: px; /* Adjust padding as needed */
+        border-radius: px; /* Adjust border radius as needed */
+        cursor: pointer;
+      }
+    </style>
   </head>
   <body>
     <h1>N-Queens Solver with State Space Tree (BackTracking Algorithm)</h1>
 
     <div class="form-container">
       <label for="n">Enter the Board Size (N)</label>
-      <input type="number" id="n" min="4" max="12" value="5"> <!-- Default value set to 5 -->
+      <input type="number" id="n" min="4" max="12" value="5" />
+      <!-- Default value set to 5 -->
       <div class="form-actions">
         <button onclick="solve()">Start Solving</button>
         <button onclick="resetBoard()">Reset</button>
@@ -201,7 +336,9 @@
       });
 
       socket.on("complete", (data) => {
-        showPopup(`Solving complete FucckS! Total solutions: ${data.solution_count}`);
+        showPopup(
+          `Solving complete FucckS! Total solutions: ${data.solution_count}`
+        );
       });
 
       function drawSnapshot(board, N, container) {
@@ -215,8 +352,7 @@
             const cell = document.createElement("div");
             cell.style.width = "20px";
             cell.style.height = "20px";
-            cell.style.backgroundColor =
-              (i + j) % 2 === 0 ? "#eee" : "#444";
+            cell.style.backgroundColor = (i + j) % 2 === 0 ? "#eee" : "#444";
             if (board[i] === j) {
               cell.innerHTML = "&#9813;";
               cell.style.color = "#ff5722";
