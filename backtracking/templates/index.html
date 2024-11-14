@@ -4,14 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>N-Queens Solver with State Space Tree</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
   </head>
   <body>
     <h1>N-Queens Solver with State Space Tree (BackTracking Algorithm)</h1>
 
     <div class="form-container">
       <label for="n">Enter the Board Size (N)</label>
-      <input type="number" id="n" min="4" max="12" value="5"> <!-- Default value set to 5 -->
+      <input type="number" id="n" min="4" max="12" value="5" />
+      <!-- Default value set to 5 -->
       <div class="form-actions">
         <button onclick="solve()">Start Solving</button>
         <button onclick="resetBoard()">Reset</button>
@@ -184,6 +188,7 @@
           .attr("dy", -20)
           .attr("text-anchor", "middle")
           .attr("font-size", "12px")
+          .attr("fill", "white") // Set label color to white
           .text((d) => d.data.name);
       }
 
@@ -201,7 +206,9 @@
       });
 
       socket.on("complete", (data) => {
-        showPopup(`Solving complete FucckS! Total solutions: ${data.solution_count}`);
+        showPopup(
+          `Solving complete! Total solutions: ${data.solution_count}`
+        );
       });
 
       function drawSnapshot(board, N, container) {
@@ -215,8 +222,7 @@
             const cell = document.createElement("div");
             cell.style.width = "20px";
             cell.style.height = "20px";
-            cell.style.backgroundColor =
-              (i + j) % 2 === 0 ? "#eee" : "#444";
+            cell.style.backgroundColor = (i + j) % 2 === 0 ? "#eee" : "#444";
             if (board[i] === j) {
               cell.innerHTML = "&#9813;";
               cell.style.color = "#ff5722";
