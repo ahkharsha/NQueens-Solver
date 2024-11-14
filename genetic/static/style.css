@@ -39,12 +39,6 @@ label {
   color: #ffc107; /* Gold color for labels */
 }
 
-.form-container input {
-  width: 20%;
-  margin-bottom: 10px;
-  text-align: center;
-}
-
 input[type="number"] {
   padding: 8px;
   border-radius: 5px;
@@ -59,6 +53,12 @@ input[type="number"]:focus {
   outline: none;
   border-color: #ffc107; /* Gold border on focus */
   box-shadow: 0px 0px 5px rgba(255, 193, 7, 0.5); /* Gold shadow on focus */
+}
+
+.form-container input {
+  width: 20%;
+  margin-bottom: 10px;
+  text-align: center;
 }
 
 button {
