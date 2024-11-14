@@ -1,274 +1,241 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>N-Queens Solver with State Space Tree</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            background-color: #f4f6f9;
-        }
-        h1 { color: #333; margin-bottom: 10px; }
-        .form-container, .solution-container, .tree-container {
-            width: 80%;
-            max-width: 600px;
-            padding: 20px;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .form-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 80%;
-            max-width: 600px;
-            padding: 20px;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .form-container label{
-            width: 100%;
-            max-width: 300px;
-            margin-bottom: 10px;
-            text-align: center;
-            font-size: 20px;
-        }
-
-        .form-container input{
-            width: 20%;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-
-        #board { display: grid; gap: 1px; margin-top: 10px; grid-template-columns: repeat(8, 50px); }
-        .cell { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; }
-        .white { background-color: #f0d9b5; }
-        .black { background-color: #b58863; }
-        .queen { color: black; font-size: 30px; }
-        button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        button:hover { background-color: #0056b3; }
-        .tree-container { margin-top: 20px; }
-        .solution-snapshots { display: flex; flex-wrap: wrap; gap: 5px; }
-        .snapshot { border: 1px solid #ddd; padding: 5px; border-radius: 5px; }
-        .form-actions { display: flex; gap: 10px; }
-
-
-        body {
-            background-image: url("{{ url_for('static', filename='images/ai.jpg') }}");
-            background-size: cover; /* Adjusts the image to cover the entire background */
-            background-position: center; /* Centers the background image */
-            background-repeat: no-repeat; /* Prevents the background from repeating */
-            font-family: Arial, sans-serif;
-        }
-    </style>
-</head>
-<body>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
     <h1>N-Queens Solver with State Space Tree (BackTracking Algorithm)</h1>
 
     <div class="form-container">
-        <label for="n">Enter the Board Size (N)</label>
-        <input type="number" id="n" min="4" max="12" value="4">
-        <div class="form-actions">
-            <button onclick="solve()">Start Solving</button>
-            <button onclick="resetBoard()">Reset</button>
-        </div>
+      <label for="n">Enter the Board Size (N)</label>
+      <input type="number" id="n" min="4" max="12" value="5"> <!-- Default value set to 5 -->
+      <div class="form-actions">
+        <button onclick="solve()">Start Solving</button>
+        <button onclick="resetBoard()">Reset</button>
+      </div>
     </div>
 
     <div id="board"></div>
 
     <div class="solution-container">
-        <h3>Solution Snapshots:</h3>
-        <div id="solution-snapshots" class="solution-snapshots"></div>
+      <h3>Solution Snapshots:</h3>
+      <div id="solution-snapshots" class="solution-snapshots"></div>
     </div>
 
     <div class="tree-container">
-        <h3>State Space Tree:</h3>
-        <svg id="state-tree" width="100%" height="600px"></svg>
+      <h3>State Space Tree:</h3>
+      <svg id="state-tree" width="100%" height="600px"></svg>
+    </div>
+
+    <!-- Popup Alert -->
+    <div id="popup" class="popup">
+      <h2 id="popup-message"></h2>
+      <button onclick="closePopup()">Close</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <script>
-        const socket = io();
-        const boardContainer = document.getElementById('board');
-        const solutionSnapshots = document.getElementById('solution-snapshots');
-        const stateTreeSVG = d3.select("#state-tree");
+      const socket = io();
+      const boardContainer = document.getElementById("board");
+      const solutionSnapshots = document.getElementById("solution-snapshots");
+      const stateTreeSVG = d3.select("#state-tree");
 
-        function drawBoard(board, N) {
-            boardContainer.innerHTML = '';
-            boardContainer.style.gridTemplateColumns = `repeat(${N}, 50px)`;
+      function drawBoard(board, N) {
+        boardContainer.innerHTML = "";
+        boardContainer.style.gridTemplateColumns = `repeat(${N}, 50px)`;
 
-            for (let i = 0; i < N; i++) {
-                for (let j = 0; j < N; j++) {
-                    const cell = document.createElement('div');
-                    cell.classList.add('cell', (i + j) % 2 === 0 ? 'white' : 'black');
-                    if (board[i] === j) {
-                        cell.innerHTML = '&#9813;';
-                        cell.classList.add('queen');
-                    }
-                    boardContainer.appendChild(cell);
-                }
+        for (let i = 0; i < N; i++) {
+          for (let j = 0; j < N; j++) {
+            const cell = document.createElement("div");
+            cell.classList.add("cell", (i + j) % 2 === 0 ? "white" : "black");
+            if (board[i] === j) {
+              cell.innerHTML = "&#9813;";
+              cell.classList.add("queen");
             }
+            boardContainer.appendChild(cell);
+          }
         }
+      }
 
-        function createStateTree(data) {
-            stateTreeSVG.selectAll("*").remove();
+      function createStateTree(data) {
+        stateTreeSVG.selectAll("*").remove();
 
-            const root = d3.hierarchy(data);
-            const treeLayout = d3.tree().size([stateTreeSVG.node().getBoundingClientRect().width - 100, 500]);
+        const root = d3.hierarchy(data);
+        const treeLayout = d3
+          .tree()
+          .size([stateTreeSVG.node().getBoundingClientRect().width - 100, 500]);
 
-            treeLayout(root);
+        treeLayout(root);
 
-            const svg = stateTreeSVG.append("g").attr("transform", "translate(50,50)");
+        const svg = stateTreeSVG
+          .append("g")
+          .attr("transform", "translate(50,50)");
 
-            svg.selectAll(".link")
-                .data(root.links())
-                .enter()
-                .append("line")
-                .attr("class", "link")
-                .attr("x1", d => d.source.x)
-                .attr("y1", d => d.source.y)
-                .attr("x2", d => d.target.x)
-                .attr("y2", d => d.target.y)
-                .attr("stroke", d => d.target.data.isPruned ? "#ff6666" : "#aaa")
-                .attr("stroke-width", 2)
-                .attr("stroke-dasharray", d => d.target.data.isPruned ? "5,5" : "");
-            
-            const node = svg.selectAll(".node")
-                .data(root.descendants())
-                .enter()
-                .append("g")
-                .attr("class", "node")
-                .attr("transform", d => `translate(${d.x},${d.y})`);
+        svg
+          .selectAll(".link")
+          .data(root.links())
+          .enter()
+          .append("line")
+          .attr("class", "link")
+          .attr("x1", (d) => d.source.x)
+          .attr("y1", (d) => d.source.y)
+          .attr("x2", (d) => d.target.x)
+          .attr("y2", (d) => d.target.y)
+          .attr("stroke", (d) => (d.target.data.isPruned ? "#ff6666" : "#aaa"))
+          .attr("stroke-width", 2)
+          .attr("stroke-dasharray", (d) =>
+            d.target.data.isPruned ? "5,5" : ""
+          );
 
-            node.append("circle")
-                .attr("r", 10)
-                .attr("fill", d => d.data.isPruned ? "#ff6666" : "#007bff");
+        const node = svg
+          .selectAll(".node")
+          .data(root.descendants())
+          .enter()
+          .append("g")
+          .attr("class", "node")
+          .attr("transform", (d) => `translate(${d.x},${d.y})`);
 
-            node.append("text")
-                .attr("dy", -15)
-                .attr("text-anchor", "middle")
-                .text(d => d.data.name);
-        }
+        node
+          .append("circle")
+          .attr("r", 10)
+          .attr("fill", (d) => (d.data.isPruned ? "#ff6666" : "#007bff"));
 
-        function solve() {
-            const N = parseInt(document.getElementById('n').value);
-            stateTreeSVG.selectAll("*").remove();
-            socket.emit('solve', { N: N });
-        }
+        node
+          .append("text")
+          .attr("dy", -15)
+          .attr("text-anchor", "middle")
+          .text((d) => d.data.name);
+      }
 
-        function resetBoard() {
-            boardContainer.innerHTML = '';  // Clear the board
-            solutionSnapshots.innerHTML = '';  // Clear the solution snapshots
-            stateTreeSVG.selectAll("*").remove();  // Clear the tree
-        }
+      function solve() {
+        const N = parseInt(document.getElementById("n").value);
+        stateTreeSVG.selectAll("*").remove();
+        socket.emit("solve", { N: N });
+      }
 
-        socket.on('update', data => {
-            drawBoard(data.board, data.board.length);
-            renderTree(data.tree);
-        });
+      function resetBoard() {
+        boardContainer.innerHTML = ""; // Clear the board
+        solutionSnapshots.innerHTML = ""; // Clear the solution snapshots
+        stateTreeSVG.selectAll("*").remove(); // Clear the tree
+      }
 
-        function renderTree(treeData) {
-            stateTreeSVG.selectAll("*").remove();
-            const root = d3.hierarchy(treeData);
-            const depth = root.height;
-            const width = stateTreeSVG.node().getBoundingClientRect().width - 100;
-            const height = Math.max(600, depth * 120);
+      socket.on("update", (data) => {
+        drawBoard(data.board, data.board.length);
+        renderTree(data.tree);
+      });
 
-            stateTreeSVG.attr("height", height + 100);
+      function renderTree(treeData) {
+        stateTreeSVG.selectAll("*").remove();
+        const root = d3.hierarchy(treeData);
+        const depth = root.height;
+        const width = stateTreeSVG.node().getBoundingClientRect().width - 100;
+        const height = Math.max(600, depth * 120);
 
-            const treeLayout = d3.tree().size([width, height]);
-            treeLayout(root);
+        stateTreeSVG.attr("height", height + 100);
 
-            const svg = stateTreeSVG.append("g")
-                .attr("transform", "translate(50,50)");
+        const treeLayout = d3.tree().size([width, height]);
+        treeLayout(root);
 
-            svg.selectAll(".link")
-                .data(root.links())
-                .enter()
-                .append("line")
-                .attr("class", "link")
-                .attr("x1", d => d.source.x)
-                .attr("y1", d => d.source.y)
-                .attr("x2", d => d.target.x)
-                .attr("y2", d => d.target.y)
-                .attr("stroke", d => d.target.data.isPruned ? "#aaa" : "#888")
-                .attr("stroke-width", 1)
-                .attr("stroke-dasharray", d => d.target.data.isPruned ? "4 4" : "");
+        const svg = stateTreeSVG
+          .append("g")
+          .attr("transform", "translate(50,50)");
 
-            const node = svg.selectAll(".node")
-                .data(root.descendants())
-                .enter()
-                .append("g")
-                .attr("class", "node")
-                .attr("transform", d => `translate(${d.x},${d.y})`);
+        svg
+          .selectAll(".link")
+          .data(root.links())
+          .enter()
+          .append("line")
+          .attr("class", "link")
+          .attr("x1", (d) => d.source.x)
+          .attr("y1", (d) => d.source.y)
+          .attr("x2", (d) => d.target.x)
+          .attr("y2", (d) => d.target.y)
+          .attr("stroke", (d) => (d.target.data.isPruned ? "#aaa" : "#888"))
+          .attr("stroke-width", 1)
+          .attr("stroke-dasharray", (d) =>
+            d.target.data.isPruned ? "4 4" : ""
+          );
 
-            node.append("circle")
-                .attr("r", 15)
-                .attr("fill", d => d.data.isSolution ? "#28a745" : d.data.isPruned ? "#f0ad4e" : "#007bff");
+        const node = svg
+          .selectAll(".node")
+          .data(root.descendants())
+          .enter()
+          .append("g")
+          .attr("class", "node")
+          .attr("transform", (d) => `translate(${d.x},${d.y})`);
 
-            node.append("text")
-                .attr("dy", -20)
-                .attr("text-anchor", "middle")
-                .attr("font-size", "12px")
-                .text(d => d.data.name);
-        }
+        node
+          .append("circle")
+          .attr("r", 15)
+          .attr("fill", (d) =>
+            d.data.isSolution
+              ? "#28a745"
+              : d.data.isPruned
+              ? "#f0ad4e"
+              : "#007bff"
+          );
 
-        socket.on('tree', data => {
-            createStateTree(data);
-        });
+        node
+          .append("text")
+          .attr("dy", -20)
+          .attr("text-anchor", "middle")
+          .attr("font-size", "12px")
+          .text((d) => d.data.name);
+      }
 
-        socket.on('solution', data => {
-            const snapshot = document.createElement('div');
-            snapshot.className = 'snapshot';
-            snapshot.innerHTML = `<strong>Solution #${data.solution_count}</strong>`;
-            const solutionBoard = [...data.board];
-            drawSnapshot(solutionBoard, data.board.length, snapshot);
-            solutionSnapshots.appendChild(snapshot);
-        });
+      socket.on("tree", (data) => {
+        createStateTree(data);
+      });
 
-        socket.on('complete', data => {
-            alert(`Solving complete! Total solutions: ${data.solution_count}`);
-        });
+      socket.on("solution", (data) => {
+        const snapshot = document.createElement("div");
+        snapshot.className = "snapshot";
+        snapshot.innerHTML = `<strong>Solution #${data.solution_count}</strong>`;
+        const solutionBoard = [...data.board];
+        drawSnapshot(solutionBoard, data.board.length, snapshot);
+        solutionSnapshots.appendChild(snapshot);
+      });
 
-        function drawSnapshot(board, N, container) {
-            const snapshotBoard = document.createElement('div');
-            snapshotBoard.style.display = 'grid';
-            snapshotBoard.style.gridTemplateColumns = `repeat(${N}, 20px)`;
-            snapshotBoard.style.gap = '1px';
+      socket.on("complete", (data) => {
+        showPopup(`Solving complete FucckS! Total solutions: ${data.solution_count}`);
+      });
 
-            for (let i = 0; i < N; i++) {
-                for (let j = 0; j < N; j++) {
-                    const cell = document.createElement('div');
-                    cell.style.width = '20px';
-                    cell.style.height = '20px';
-                    cell.style.backgroundColor = (i + j) % 2 === 0 ? '#f0d9b5' : '#b58863';
-                    if (board[i] === j) {
-                        cell.innerHTML = '&#9813;';
-                        cell.style.color = 'black';
-                    }
-                    snapshotBoard.appendChild(cell);
-                }
+      function drawSnapshot(board, N, container) {
+        const snapshotBoard = document.createElement("div");
+        snapshotBoard.style.display = "grid";
+        snapshotBoard.style.gridTemplateColumns = `repeat(${N}, 20px)`;
+        snapshotBoard.style.gap = "1px";
+
+        for (let i = 0; i < N; i++) {
+          for (let j = 0; j < N; j++) {
+            const cell = document.createElement("div");
+            cell.style.width = "20px";
+            cell.style.height = "20px";
+            cell.style.backgroundColor =
+              (i + j) % 2 === 0 ? "#eee" : "#444";
+            if (board[i] === j) {
+              cell.innerHTML = "&#9813;";
+              cell.style.color = "#ff5722";
             }
-            container.appendChild(snapshotBoard);
+            snapshotBoard.appendChild(cell);
+          }
         }
+        container.appendChild(snapshotBoard);
+      }
+
+      // Popup Functions
+      function showPopup(message) {
+        document.getElementById("popup-message").innerText = message;
+        document.getElementById("popup").style.display = "block";
+      }
+
+      function closePopup() {
+        document.getElementById("popup").style.display = "none";
+      }
     </script>
-</body>
+  </body>
 </html>
