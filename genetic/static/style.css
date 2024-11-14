@@ -39,6 +39,14 @@ label {
   color: #ffc107; /* Gold color for labels */
 }
 
+.form-container label {
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 10px;
+  text-align: center;
+  font-size: 20px;
+}
+
 input[type="number"] {
   padding: 8px;
   border-radius: 5px;
